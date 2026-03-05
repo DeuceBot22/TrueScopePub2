@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react'
 import ForceGraph2D, { ForceGraphMethods } from 'react-force-graph-2d';
 import { useStore, Claim, Entity } from '@/lib/store';
 import { useTheme } from 'next-themes';
-import * as d3 from 'd3-force';
+import { forceRadial } from 'd3-force';
 
 export function GraphView() {
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
@@ -27,12 +27,14 @@ export function GraphView() {
 
   useEffect(() => {
     const observer = new ResizeObserver(entries => {
-      if (entries[0]) {
-        setDimensions({
-          width: entries[0].contentRect.width,
-          height: entries[0].contentRect.height
-        });
-      }
+      window.requestAnimationFrame(() => {
+        if (entries[0] && entries[0].contentRect) {
+          setDimensions({
+            width: entries[0].contentRect.width,
+            height: entries[0].contentRect.height
+          });
+        }
+      });
     });
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
@@ -113,7 +115,7 @@ export function GraphView() {
     if (graphLayout === 'Radial' && selectedNodeId) {
       fg.d3Force('charge')?.strength(-500);
       // Custom radial layout logic would go here, for now we just tweak forces
-      fg.d3Force('radial', d3.forceRadial(150, dimensions.width/2, dimensions.height/2).strength((d: any) => d.id === selectedNodeId ? 1 : 0.1));
+      fg.d3Force('radial', forceRadial(150, dimensions.width/2, dimensions.height/2).strength((d: any) => d.id === selectedNodeId ? 1 : 0.1));
     } else {
       fg.d3Force('charge')?.strength(-200);
       fg.d3Force('radial', null); // Remove radial force
