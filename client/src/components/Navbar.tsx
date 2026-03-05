@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Shield, ShieldAlert, LayoutTemplate, Activity } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CreateEntityDialog, CreateClaimDialog } from './CreateModals';
+import { CreateEntityDialog, CreateClaimDialog, CreateEventDialog } from './CreateModals';
 
 export function Navbar() {
   const { viewMode, setViewMode, graphLayout, setGraphLayout } = useStore();
@@ -51,6 +51,7 @@ export function Navbar() {
           <TooltipContent>Toggle Graph Layout (Force / Radial)</TooltipContent>
         </Tooltip>
 
+        <CreateEventDialog />
         <CreateClaimDialog />
         <CreateEntityDialog />
       </div>

@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MultiSelect } from '@/components/ui/multi-select'; // Assuming a multi-select or just using a simple approach for V0
 
 export function CreateEntityDialog() {
   const [open, setOpen] = useState(false);
@@ -40,7 +41,7 @@ export function CreateEntityDialog() {
       <DialogTrigger asChild>
         <Button size="sm" className="h-8" data-testid="button-create-entity">
           <Plus className="w-4 h-4 mr-2" />
-          Add Entity
+          Entity
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-md">
@@ -120,7 +121,7 @@ export function CreateClaimDialog() {
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="h-8 border-border/50 bg-background/50" data-testid="button-create-claim">
           <Plus className="w-4 h-4 mr-2" />
-          Add Claim
+          Claim
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-md">
@@ -189,6 +190,77 @@ export function CreateClaimDialog() {
           </div>
 
           <Button type="submit" data-testid="button-submit-claim">Create Claim</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function CreateEventDialog() {
+  const [open, setOpen] = useState(false);
+  const { addEvent, entities } = useStore();
+  const { toast } = useToast();
+
+  const [title, setTitle] = useState('');
+  const [dateStart, setDateStart] = useState('');
+  const [notes, setNotes] = useState('');
+  const [locationId, setLocationId] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addEvent({
+      title,
+      dateStart,
+      participantIds: [], // Simplification for V0
+      evidenceIds: [],
+      notes,
+      locationId: locationId || undefined
+    });
+    setOpen(false);
+    setTitle('');
+    setDateStart('');
+    setNotes('');
+    setLocationId('');
+    toast({ title: "Event created", description: `${title} has been added to timeline.` });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="h-8 border-border/50 bg-background/50" data-testid="button-create-event">
+          <CalendarIcon className="w-4 h-4 mr-2" />
+          Event
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-md">
+        <DialogHeader>
+          <DialogTitle>Create New Event</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="title">Event Title</Label>
+            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} required data-testid="input-event-title" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} required data-testid="input-event-date" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Location (Place Entity)</Label>
+            <Select value={locationId} onValueChange={setLocationId}>
+              <SelectTrigger><SelectValue placeholder="Select location (optional)" /></SelectTrigger>
+              <SelectContent>
+                {entities.filter(e => e.type === 'Place').map(e => (
+                  <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="event-notes">Notes</Label>
+            <Textarea id="event-notes" value={notes} onChange={e => setNotes(e.target.value)} data-testid="input-event-notes" />
+          </div>
+          <Button type="submit" data-testid="button-submit-event">Create Event</Button>
         </form>
       </DialogContent>
     </Dialog>
