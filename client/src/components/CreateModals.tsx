@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useStore, EntityType, ClaimType } from '@/lib/store';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { MultiSelect } from '@/components/ui/multi-select'; // Assuming a multi-select or just using a simple approach for V0
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function CreateEntityDialog() {
   const [open, setOpen] = useState(false);
@@ -47,6 +48,7 @@ export function CreateEntityDialog() {
       <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-md">
         <DialogHeader>
           <DialogTitle>Create New Entity</DialogTitle>
+          <DialogDescription>Add a person, organization, or place to your investigation.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -127,6 +129,7 @@ export function CreateClaimDialog() {
       <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-md">
         <DialogHeader>
           <DialogTitle>Create Relationship Claim</DialogTitle>
+          <DialogDescription>Establish a connection between two entities.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -205,13 +208,14 @@ export function CreateEventDialog() {
   const [dateStart, setDateStart] = useState('');
   const [notes, setNotes] = useState('');
   const [locationId, setLocationId] = useState('');
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addEvent({
       title,
       dateStart,
-      participantIds: [], // Simplification for V0
+      participantIds: selectedParticipants,
       evidenceIds: [],
       notes,
       locationId: locationId || undefined
@@ -221,7 +225,14 @@ export function CreateEventDialog() {
     setDateStart('');
     setNotes('');
     setLocationId('');
+    setSelectedParticipants([]);
     toast({ title: "Event created", description: `${title} has been added to timeline.` });
+  };
+
+  const toggleParticipant = (id: string) => {
+    setSelectedParticipants(prev => 
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -232,14 +243,15 @@ export function CreateEventDialog() {
           Event
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-background/95 backdrop-blur-md">
+      <DialogContent className="sm:max-w-[450px] bg-background/95 backdrop-blur-md max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
+          <DialogDescription>Add a dated event and link participants from your entities.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="grid gap-4 py-4 overflow-y-auto pr-2">
           <div className="grid gap-2">
             <Label htmlFor="title">Event Title</Label>
-            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} required data-testid="input-event-title" />
+            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} required placeholder="e.g. Secret Meeting" data-testid="input-event-title" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="date">Date</Label>
@@ -256,9 +268,31 @@ export function CreateEventDialog() {
               </SelectContent>
             </Select>
           </div>
+          
+          <div className="grid gap-2">
+            <Label className="flex items-center gap-2">
+              <Users className="w-3 h-3" /> Participants
+            </Label>
+            <ScrollArea className="h-[100px] border border-border/50 rounded-md p-2 bg-background/30">
+              <div className="flex flex-wrap gap-2">
+                {entities.filter(e => e.type === 'Person' || e.type === 'Organization').map(e => (
+                  <Badge 
+                    key={e.id} 
+                    variant={selectedParticipants.includes(e.id) ? "default" : "outline"}
+                    className="cursor-pointer transition-colors"
+                    onClick={() => toggleParticipant(e.id)}
+                  >
+                    {e.name}
+                  </Badge>
+                ))}
+              </div>
+            </ScrollArea>
+            <p className="text-[10px] text-muted-foreground italic">Click to select/deselect participants</p>
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="event-notes">Notes</Label>
-            <Textarea id="event-notes" value={notes} onChange={e => setNotes(e.target.value)} data-testid="input-event-notes" />
+            <Textarea id="event-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add relevant details..." data-testid="input-event-notes" />
           </div>
           <Button type="submit" data-testid="button-submit-event">Create Event</Button>
         </form>
