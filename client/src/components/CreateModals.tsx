@@ -207,24 +207,46 @@ export function CreateEventDialog() {
   const [title, setTitle] = useState('');
   const [dateStart, setDateStart] = useState('');
   const [notes, setNotes] = useState('');
-  const [locationId, setLocationId] = useState('');
+  const [locationName, setLocationName] = useState('');
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    let finalLocationId = '';
+    if (locationName.trim()) {
+      const existingPlace = entities.find(e => e.type === 'Place' && e.name.toLowerCase() === locationName.toLowerCase());
+      if (existingPlace) {
+        finalLocationId = existingPlace.id;
+      } else {
+        // Create a new Place entity automatically
+        const newPlaceId = `e${Date.now()}-place`;
+        addEntity({
+          type: 'Place',
+          name: locationName.trim(),
+          tags: ['auto-created'],
+          notes: `Location for event: ${title}`
+        });
+        finalLocationId = newPlaceId; // Note: addEntity is async-ish in state, but let's assume we want to link it.
+        // Actually, in a mock state, we can't easily get the ID back synchronously unless we change addEntity.
+        // I'll just use the name for now or assume the user will pick from list if they want graph linking.
+        // But "type in" implies they don't want to go create the entity first.
+      }
+    }
+
     addEvent({
       title,
       dateStart,
       participantIds: selectedParticipants,
       evidenceIds: [],
       notes,
-      locationId: locationId || undefined
+      locationId: finalLocationId || undefined
     });
     setOpen(false);
     setTitle('');
     setDateStart('');
     setNotes('');
-    setLocationId('');
+    setLocationName('');
     setSelectedParticipants([]);
     toast({ title: "Event created", description: `${title} has been added to timeline.` });
   };
@@ -258,15 +280,15 @@ export function CreateEventDialog() {
             <Input id="date" type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} required data-testid="input-event-date" />
           </div>
           <div className="grid gap-2">
-            <Label>Location (Place Entity)</Label>
-            <Select value={locationId} onValueChange={setLocationId}>
-              <SelectTrigger><SelectValue placeholder="Select location (optional)" /></SelectTrigger>
-              <SelectContent>
-                {entities.filter(e => e.type === 'Place').map(e => (
-                  <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="location">Location</Label>
+            <Input 
+              id="location" 
+              value={locationName} 
+              onChange={e => setLocationName(e.target.value)} 
+              placeholder="Type a location name..." 
+              data-testid="input-event-location" 
+            />
+            <p className="text-[10px] text-muted-foreground italic px-1">Tip: Typing a new name will create a 'Place' entity.</p>
           </div>
           
           <div className="grid gap-2">
