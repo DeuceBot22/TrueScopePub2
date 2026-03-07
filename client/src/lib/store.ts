@@ -78,7 +78,13 @@ interface AppState {
   timeWindowEnd: number | null;
   activeClaimTypes: Set<ClaimType>;
   minConfidenceScore: number;
+
+  // Layout State
+  isTimelineCollapsed: boolean;
+  isInspectorCollapsed: boolean;
+  isLegendCollapsed: boolean;
   
+  // Actions
   setViewMode: (mode: ViewMode) => void;
   setGraphLayout: (layout: GraphLayout) => void;
   selectNode: (id: string | null) => void;
@@ -89,6 +95,12 @@ interface AppState {
   toggleClaimTypeFilter: (type: ClaimType) => void;
   setMinConfidenceScore: (score: number) => void;
   
+  // Layout Actions
+  setTimelineCollapsed: (collapsed: boolean) => void;
+  setInspectorCollapsed: (collapsed: boolean) => void;
+  setLegendCollapsed: (collapsed: boolean) => void;
+  
+  // Data Mutations (Mock CRUD)
   addEntity: (entity: Omit<Entity, 'id' | 'createdAt'>) => void;
   addEvidence: (evidence: Omit<Evidence, 'id' | 'createdAt'>) => void;
   addEvent: (event: Omit<Event, 'id' | 'createdAt'>) => void;
@@ -136,10 +148,15 @@ export const useStore = create<AppState>((set) => ({
   selectedClaimId: null,
   selectedEventId: null,
   
-  timeWindowStart: new Date('2023-01-01').getTime(),
-  timeWindowEnd: new Date('2024-12-31').getTime(),
+  timeWindowStart: new Date('1920-01-01').getTime(),
+  timeWindowEnd: new Date('2030-12-31').getTime(),
   activeClaimTypes: new Set<ClaimType>(['funding', 'affiliation', 'communication', 'family', 'conflict', 'influence', 'ownership', 'legal', 'other']),
   minConfidenceScore: 1,
+
+  // Layout State
+  isTimelineCollapsed: false,
+  isInspectorCollapsed: false,
+  isLegendCollapsed: false,
   
   setViewMode: (mode) => set({ viewMode: mode }),
   setGraphLayout: (layout) => set({ graphLayout: layout }),
@@ -158,6 +175,11 @@ export const useStore = create<AppState>((set) => ({
     return { activeClaimTypes: newTypes };
   }),
   setMinConfidenceScore: (score) => set({ minConfidenceScore: score }),
+
+  // Layout Actions
+  setTimelineCollapsed: (collapsed) => set({ isTimelineCollapsed: collapsed }),
+  setInspectorCollapsed: (collapsed) => set({ isInspectorCollapsed: collapsed }),
+  setLegendCollapsed: (collapsed) => set({ isLegendCollapsed: collapsed }),
   
   addEntity: (entity) => set((state) => ({ 
     entities: [...state.entities, { ...entity, id: `e${Date.now()}`, createdAt: Date.now() }] 
