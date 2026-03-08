@@ -201,7 +201,7 @@ export function CreateClaimDialog() {
 
 export function CreateEventDialog() {
   const [open, setOpen] = useState(false);
-  const { addEvent, entities } = useStore();
+  const { addEvent, addEntity, entities } = useStore();
   const { toast } = useToast();
 
   const [title, setTitle] = useState('');

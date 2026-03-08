@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GraphView } from '@/components/GraphView';
 import { Legend } from '@/components/Legend';
 import { TimelineView } from '@/components/TimelineView';
@@ -13,8 +13,30 @@ export default function Home() {
   const { 
     isTimelineCollapsed, setTimelineCollapsed,
     isInspectorCollapsed, setInspectorCollapsed,
-    isLegendCollapsed, setLegendCollapsed
+    isLegendCollapsed, setLegendCollapsed,
+    loadEntities,
+    loadEvidence,
+    loadEvents,
+    loadClaims
   } = useStore();
+
+  useEffect(() => {
+    loadEntities().catch((err) => {
+      console.error("Failed to load entities", err);
+    });
+
+    loadEvidence().catch((err) => {
+      console.error("Failed to load evidence", err);
+    });
+
+    loadEvents().catch((err) => {
+      console.error("Failed to load events", err);
+    });
+
+    loadClaims().catch((err) => {
+      console.error("Failed to load claims", err);
+    });
+  }, [loadEntities, loadEvidence, loadEvents, loadClaims]);
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground" data-testid="page-home">

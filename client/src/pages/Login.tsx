@@ -7,16 +7,43 @@ import { useStore } from '@/lib/store';
 import { useLocation } from 'wouter';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { setAuthenticated } = useStore();
   const [, setLocation] = useLocation();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(mode === 'login' ? '/api/login' : '/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `${mode} failed`);
+      }
+
       setAuthenticated(true);
       setLocation('/');
+    } catch (err) {
+      console.error(err);
+      setError(mode === 'login' ? 'Login failed' : 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -31,37 +58,58 @@ export default function Login() {
           <p className="text-sm text-muted-foreground">Private investigative analysis platform.</p>
         </div>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="investigator@agency.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required 
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="deuce"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
               className="bg-background/50 border-border/50"
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
+            <Input
+              id="password"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
               className="bg-background/50 border-border/50"
             />
           </div>
-          <Button type="submit" className="w-full mt-2">
-            Secure Login
+
+          {error ? (
+            <div className="text-sm text-red-500">{error}</div>
+          ) : null}
+
+          <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
+            {isSubmitting
+              ? (mode === 'login' ? 'Logging in...' : 'Creating account...')
+              : (mode === 'login' ? 'Secure Login' : 'Create Account')}
           </Button>
         </form>
 
-        <div className="text-center text-xs text-muted-foreground mt-4">
-          Data is encrypted and private to your workspace.
+        <button
+          type="button"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => {
+            setMode(mode === 'login' ? 'register' : 'login');
+            setError('');
+          }}
+        >
+          {mode === 'login'
+            ? 'Need an account? Register'
+            : 'Already have an account? Login'}
+        </button>
+
+        <div className="text-center text-xs text-muted-foreground mt-2">
+          Data is private to your workspace.
         </div>
       </div>
     </div>

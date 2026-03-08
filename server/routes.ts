@@ -5,10 +5,15 @@ import connectPgSimple from "connect-pg-simple";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import crypto from "crypto";
-import { z } from "zod";
 import { storage } from "./storage";
 import { pool } from "./db";
-import { insertUserSchema, insertEntitySchema } from "@shared/schema";
+import {
+  insertUserSchema,
+  insertEntitySchema,
+  insertEvidenceSchema,
+  insertEventSchema,
+  insertClaimSchema,
+} from "@shared/schema";
 
 const PgSession = connectPgSimple(session);
 
@@ -21,8 +26,10 @@ function requireAuth(req: Request, res: Response, next: Function) {
   return res.status(401).json({ message: "Unauthorized" });
 }
 
-export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  // --- Sessions (stored in Postgres) ---
+export async function registerRoutes(
+  httpServer: Server,
+  app: Express,
+): Promise<Server> {
   app.use(
     session({
       store: new PgSession({
@@ -41,7 +48,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }),
   );
 
-  // --- Passport Local ---
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -49,7 +55,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (!user) return done(null, false, { message: "Invalid credentials" });
 
         const hashed = hashPassword(password);
-        if (user.password !== hashed) return done(null, false, { message: "Invalid credentials" });
+        if (user.password !== hashed) {
+          return done(null, false, { message: "Invalid credentials" });
+        }
 
         return done(null, user);
       } catch (err) {
@@ -71,20 +79,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // --- Auth routes ---
+  // Auth
   app.post("/api/register", async (req, res) => {
     const parsed = insertUserSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid input", issues: parsed.error.issues });
+      return res
+        .status(400)
+        .json({ message: "Invalid input", issues: parsed.error.issues });
     }
 
     const { username, password } = parsed.data;
     const existing = await storage.getUserByUsername(username);
-    if (existing) return res.status(409).json({ message: "Username already exists" });
+    if (existing) {
+      return res.status(409).json({ message: "Username already exists" });
+    }
 
-    const user = await storage.createUser({ username, password: hashPassword(password) });
+    const user = await storage.createUser({
+      username,
+      password: hashPassword(password),
+    });
 
-    // auto-login after register
     req.login(user as any, (err) => {
       if (err) return res.status(500).json({ message: "Login failed" });
       return res.json({ id: user.id, username: user.username });
@@ -115,7 +129,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ id: u.id, username: u.username });
   });
 
-  // --- Entities routes ---
+  // Entities
   app.get("/api/entities", requireAuth, async (req, res) => {
     const userId = (req.user as any).id as string;
     const rows = await storage.listEntities(userId);
@@ -124,13 +138,85 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/entities", requireAuth, async (req, res) => {
     const userId = (req.user as any).id as string;
-
     const parsed = insertEntitySchema.safeParse(req.body);
+
     if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid input", issues: parsed.error.issues });
+      return res
+        .status(400)
+        .json({ message: "Invalid input", issues: parsed.error.issues });
     }
 
     const created = await storage.createEntity(userId, parsed.data);
+    res.json(created);
+  });
+
+  // Evidence
+  app.get("/api/evidence", requireAuth, async (req, res) => {
+    const userId = (req.user as any).id as string;
+    const rows = await storage.listEvidence(userId);
+    res.json(rows);
+  });
+
+  app.post("/api/evidence", requireAuth, async (req, res) => {
+    const userId = (req.user as any).id as string;
+    const parsed = insertEvidenceSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({ message: "Invalid input", issues: parsed.error.issues });
+    }
+
+    const created = await storage.createEvidence(userId, parsed.data);
+    res.json(created);
+  });
+
+  // Events
+  app.get("/api/events", requireAuth, async (req, res) => {
+    const userId = (req.user as any).id as string;
+    const rows = await storage.listEvents(userId);
+    res.json(rows);
+  });
+
+  app.post("/api/events", requireAuth, async (req, res) => {
+    const userId = (req.user as any).id as string;
+    const parsed = insertEventSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({ message: "Invalid input", issues: parsed.error.issues });
+    }
+
+    const participantIds = Array.isArray(req.body.participantIds)
+      ? req.body.participantIds
+      : [];
+
+    const created = await storage.createEvent(userId, {
+      ...parsed.data,
+      participantIds,
+    });
+    res.json(created);
+  });
+
+  // Claims
+  app.get("/api/claims", requireAuth, async (req, res) => {
+    const userId = (req.user as any).id as string;
+    const rows = await storage.listClaims(userId);
+    res.json(rows);
+  });
+
+  app.post("/api/claims", requireAuth, async (req, res) => {
+    const userId = (req.user as any).id as string;
+    const parsed = insertClaimSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({ message: "Invalid input", issues: parsed.error.issues });
+    }
+
+    const created = await storage.createClaim(userId, parsed.data);
     res.json(created);
   });
 
