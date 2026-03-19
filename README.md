@@ -172,6 +172,8 @@ The goal is to combine:
 network analysis  
 timeline reconstruction  
 evidence tracking  
+AI pattern recognition leveraging
+Advanced mathematically based algorithms that close in on the stitistical probabilities of a (case cycle}= entities>> motive >>choice>>cause >>> effect >>evidence>>substantiation! all the end goal to move the case cycle from speculation to substantiation
 
 into a single investigative interface.
 
