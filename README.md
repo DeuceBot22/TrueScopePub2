@@ -1,12 +1,13 @@
 # TrueScope
 
-TrueScope is an investigative analysis platform designed to map relationships between entities, evidence, and events while preserving **timeline context**.
+TrueScope is an investigative analysis platform designed to map relationships between entities(people, places, countries, government agencies, ngos,  philanthropic organizations wealthy elites, government agencies, etc.}evidence, and events while preserving **timeline context**. while being connected byrelationship nodes that get geographically superimposed on a globe of the Earth. the timeline has a slider adjustment so you can select a time frame in which the data on the graph will portray. there will be different modes you can choose from to view the data. mode one: no structure in this mode none of the portrayed data is confined to any constraints and all of the nodes are free floating if they hold no geographic relationship mode 2: unverified in this mode it will make any connections even if there's not any substantiable evidence or proof connecting nodes mode 3: in this mode graph will require some linking evidence to form relationships between nodes which are events connected to places  geographical locations and entities. the objective of the app is to gather enough data to create patterns with which an AI can infrence a statistically probably connection. that app and data will be available to a subscription based clientele. The clientele will be offered paid bounties upon the completion of patching holes in the data needed to substantiate connections between entities places and events within time frames. the app also offers an offline mode to be used as a private investigation app we're all the data will be stored on their local machine they will be able to switch between community view and their private data.
 
 Unlike traditional graph tools, TrueScope combines:
 
 • relationship graphs  
-• evidence tracking  
-• event timelines  
+• evidence tracking  -private encrypted system
+-social bounties 
+• event timelines  -geolocational node placement1
 
 into a single investigative environment.
 
